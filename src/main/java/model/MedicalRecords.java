@@ -1,7 +1,6 @@
 package model;
 
 import java.time.LocalDateTime;
-// Cần import thêm hai thư viện này cho việc chuyển đổi
 import java.sql.Timestamp;
 import java.util.Date;
 

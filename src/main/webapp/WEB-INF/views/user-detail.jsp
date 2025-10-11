@@ -245,10 +245,10 @@
         </dd>
       </dl>
 
-      <div class="text-center mt-4 pt-3 border-top d-flex justify-content-center gap-3">
-        <a href="${pageContext.request.contextPath}/users?action=editForm&id=${user.user_id}" class="btn btn-secondary-custom">
-          <i class="fas fa-edit me-2"></i> Chỉnh sửa
-        </a>
+     <div class="text-center mt-4 pt-3 border-top d-flex justify-content-center gap-3">
+<%--        <a href="${pageContext.request.contextPath}/users?action=editForm&id=${user.user_id}" class="btn btn-secondary-custom">--%>
+<%--          <i class="fas fa-edit me-2"></i> Chỉnh sửa--%>
+<%--        </a>--%>
 
         <a href="${pageContext.request.contextPath}/users" class="btn btn-custom">
           <i class="fas fa-arrow-left me-2"></i> Quay lại danh sách

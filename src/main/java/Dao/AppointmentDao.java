@@ -38,13 +38,15 @@ public class AppointmentDao {
         return Connection_DreamTooth.getConnection();
     }
 
-    // Query cơ bản
+    // Query cơ bản (Giả định bạn đã tạo join với action_service và đặt tên là s)
     private final String BASE_SELECT_SQL =
             "SELECT a.*, up.full_name as patient_name " +
                     "FROM appointments a " +
                     "INNER JOIN users up ON a.patient_id = up.user_id ";
+    // Nếu muốn thêm tên dịch vụ, uncomment dòng dưới:
+    // "INNER JOIN action_service s ON a.service_id = s.service_id ";
 
-    // CREATE - Thêm lịch hẹn mới
+    // CREATE - Thêm lịch hẹn mới (Không thay đổi)
     public boolean addAppointment(Appointments appointment) {
         // SQL: 8 cột (appointment_code, patient_id, service_id, appointment_date, appointment_time, status, note, created_at)
         String sql = "INSERT INTO appointments (appointment_code, patient_id, service_id, appointment_date, appointment_time, status, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -85,7 +87,7 @@ public class AppointmentDao {
         return false;
     }
 
-    // READ - Lấy tất cả lịch hẹn
+    // READ - Lấy tất cả lịch hẹn (Không thay đổi)
     public List<Appointments> findAll() {
         List<Appointments> appointments = new ArrayList<>();
         String sql = BASE_SELECT_SQL + " ORDER BY a.appointment_date DESC, a.appointment_time DESC";
@@ -104,7 +106,7 @@ public class AppointmentDao {
         return appointments;
     }
 
-    // READ - Lấy lịch hẹn theo ID
+    // READ - Lấy lịch hẹn theo ID (Không thay đổi)
     public Appointments findById(int appointmentId) {
         String sql = BASE_SELECT_SQL + " WHERE a.appointment_id = ?";
 
@@ -124,7 +126,7 @@ public class AppointmentDao {
         return null;
     }
 
-    // READ - Tìm kiếm theo mã lịch hẹn
+    // READ - Tìm kiếm theo mã lịch hẹn (Không thay đổi)
     public Appointments findByAppointmentCode(String appointmentCode) {
         String sql = BASE_SELECT_SQL + " WHERE a.appointment_code = ?";
 
@@ -144,7 +146,7 @@ public class AppointmentDao {
         return null;
     }
 
-    // READ - Tìm kiếm theo patient_id (bệnh nhân)
+    // READ - Tìm kiếm theo patient_id (bệnh nhân) (Không thay đổi)
     public List<Appointments> findByPatientId(int patientId) {
         List<Appointments> appointments = new ArrayList<>();
         String sql = BASE_SELECT_SQL + " WHERE a.patient_id = ? ORDER BY a.appointment_date DESC, a.appointment_time DESC";
@@ -165,7 +167,7 @@ public class AppointmentDao {
         return appointments;
     }
 
-    // READ - Tìm kiếm theo service_id
+    // READ - Tìm kiếm theo service_id (Không thay đổi)
     public List<Appointments> findByServiceId(int serviceId) {
         List<Appointments> appointments = new ArrayList<>();
         String sql = BASE_SELECT_SQL + " WHERE a.service_id = ? ORDER BY a.appointment_date DESC, a.appointment_time DESC";
@@ -186,7 +188,7 @@ public class AppointmentDao {
         return appointments;
     }
 
-    // READ - Tìm kiếm theo ngày hẹn
+    // READ - Tìm kiếm theo ngày hẹn (Không thay đổi)
     public List<Appointments> findByAppointmentDate(LocalDate date) {
         List<Appointments> appointments = new ArrayList<>();
         String sql = BASE_SELECT_SQL + " WHERE a.appointment_date = ? ORDER BY a.appointment_time ASC";
@@ -207,7 +209,7 @@ public class AppointmentDao {
         return appointments;
     }
 
-    // READ - Tìm kiếm theo thời gian hẹn
+    // READ - Tìm kiếm theo thời gian hẹn (Không thay đổi)
     public List<Appointments> findByAppointmentTime(LocalTime time) {
         List<Appointments> appointments = new ArrayList<>();
         String sql = BASE_SELECT_SQL + " WHERE a.appointment_time = ? ORDER BY a.appointment_date DESC";
@@ -228,7 +230,7 @@ public class AppointmentDao {
         return appointments;
     }
 
-    // READ - Tìm kiếm theo ngày và bệnh nhân
+    // READ - Tìm kiếm theo ngày và bệnh nhân (Không thay đổi)
     public List<Appointments> findByDateAndPatient(LocalDate date, int patientId) {
         List<Appointments> appointments = new ArrayList<>();
         String sql = BASE_SELECT_SQL + " WHERE a.appointment_date = ? AND a.patient_id = ? ORDER BY a.appointment_time ASC";
@@ -250,7 +252,7 @@ public class AppointmentDao {
         return appointments;
     }
 
-    // READ - Tìm kiếm theo trạng thái
+    // READ - Tìm kiếm theo trạng thái (Không thay đổi)
     public List<Appointments> findByStatus(String status) {
         List<Appointments> appointments = new ArrayList<>();
         String sql = BASE_SELECT_SQL + " WHERE a.status = ? ORDER BY a.appointment_date DESC, a.appointment_time DESC";
@@ -272,7 +274,7 @@ public class AppointmentDao {
         return appointments;
     }
 
-    // UPDATE - Cập nhật lịch hẹn
+    // UPDATE - Cập nhật lịch hẹn (Không thay đổi)
     public boolean updateAppointment(Appointments appointment) {
         // SQL: 7 cột được UPDATE (appointment_code, patient_id, service_id, appointment_date, appointment_time, status, note)
         String sql = "UPDATE appointments SET appointment_code = ?, patient_id = ?, service_id = ?, " +
@@ -306,7 +308,7 @@ public class AppointmentDao {
         }
     }
 
-    // UPDATE - Cập nhật trạng thái lịch hẹn
+    // UPDATE - Cập nhật trạng thái lịch hẹn (Không thay đổi)
     public boolean updateAppointmentStatus(int appointmentId, String status) {
         String sql = "UPDATE appointments SET status = ? WHERE appointment_id = ?";
 
@@ -323,7 +325,7 @@ public class AppointmentDao {
         }
     }
 
-    // DELETE - Xóa lịch hẹn
+    // DELETE - Xóa lịch hẹn (Không thay đổi)
     public boolean deleteAppointment(int appointmentId) {
         String sql = "DELETE FROM appointments WHERE appointment_id = ?";
 
@@ -338,6 +340,7 @@ public class AppointmentDao {
         }
     }
 
+    // ⭐ PHƯƠNG THỨC NÀY ĐÃ ĐƯỢC SỬA LỖI XỬ LÝ NULL ⭐
     private Appointments mapResultSetToAppointment(ResultSet rs) throws SQLException {
         Appointments appointment = new Appointments();
         appointment.setAppointment_id(rs.getInt("appointment_id"));
@@ -351,12 +354,21 @@ public class AppointmentDao {
         } catch (SQLException ignored) { /* Bỏ qua nếu cột không tồn tại */ }
         appointment.setPatient_id(patient);
 
+        // 2. Ánh xạ Service (Chỉ ID)
         Action_Service service = new Action_Service();
         service.setService_id(rs.getInt("service_id"));
         appointment.setService_id(service);
 
-        appointment.setAppointment_date(rs.getDate("appointment_date").toLocalDate());
-        appointment.setAppointment_time(rs.getTime("appointment_time").toLocalTime());
+        // 3. Xử lý NULL cho Date và Time
+        Date sqlDate = rs.getDate("appointment_date");
+        if (sqlDate != null) {
+            appointment.setAppointment_date(sqlDate.toLocalDate());
+        }
+
+        Time sqlTime = rs.getTime("appointment_time");
+        if (sqlTime != null) {
+            appointment.setAppointment_time(sqlTime.toLocalTime());
+        }
 
         appointment.setStatus(rs.getString("status"));
         appointment.setNote(rs.getString("note"));
@@ -391,23 +403,8 @@ public class AppointmentDao {
         return false;
     }
 
+    // Phương thức này là duplicate của findByPatientId, nên chỉ cần giữ lại một
     public List<Appointments> getAppointmentsByPatientId(int patientId) {
-        List<Appointments> appointments = new ArrayList<>();
-        String SQL = BASE_SELECT_SQL + " WHERE a.patient_id = ? ORDER BY appointment_date DESC";
-
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(SQL)) {
-
-            ps.setInt(1, patientId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Appointments appointment = mapResultSetToAppointment(rs);
-                    appointments.add(appointment);
-                }
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi khi lấy danh sách lịch hẹn theo patient ID", e);
-        }
-        return appointments;
+        return findByPatientId(patientId);
     }
 }

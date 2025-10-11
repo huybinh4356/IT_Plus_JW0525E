@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <style>
-        /* ... (Phần CSS giữ nguyên) ... */
         body {
             background-color: #f0f8ff;
             margin: 0;
@@ -83,7 +82,6 @@
             font-size: 0.95rem;
         }
 
-        /* Nút thêm mới */
         .btn-success {
             background: #28a745;
             border: none;
@@ -149,13 +147,10 @@
 
     <h3 class="mb-4">
         <i class="fas fa-notes-medical me-2"></i>
-        <%-- LOGIC HIỂN THỊ TIÊU ĐỀ DỰA TRÊN ROLE ID --%>
         <c:choose>
-            <%-- Nếu là Bệnh nhân (Role ID 3) --%>
             <c:when test="${sessionScope.userRoleId + 0 eq 3}">
                 Hồ sơ Bệnh án của tôi
             </c:when>
-            <%-- Nếu là Admin/Bác sĩ (Role ID 1, 2) hoặc đang xem bệnh nhân cụ thể --%>
             <c:when test="${not empty patientId}">
                 Lịch sử Bệnh án của Bệnh nhân ID: ${patientId}
             </c:when>
@@ -170,7 +165,6 @@
             <i class="fas fa-home me-2"></i> Trang chủ
         </a>
 
-        <%-- CHỈ CHO PHÉP ADMIN/BÁC SĨ THÊM HỒ SƠ --%>
         <c:if test="${sessionScope.userRoleId + 0 eq 1 || sessionScope.userRoleId + 0 eq 2}">
             <a href="medical-records?action=showAddForm" class="btn btn-success shadow">
                 <i class="fas fa-plus me-2"></i> Thêm Hồ sơ mới
@@ -215,7 +209,6 @@
                                 </c:if>
                             </td>
                             <td>
-                                    <%-- ĐÃ SỬA LỖI ĐỊNH DẠNG NGÀY THÁNG --%>
                                 <c:if test="${not empty record.createdAtTimestamp}">
                                     <fmt:formatDate value="${record.createdAtTimestamp}" pattern="dd-MM-yyyy HH:mm"/>
                                 </c:if>

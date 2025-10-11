@@ -215,6 +215,10 @@
     var appointmentSelect = document.getElementById("appointment_id");
     var initialPatientId = patientSelect.value;
 
+    // Lấy ID lịch hẹn đã chọn trước đó (khi form bị lỗi)
+    var initialAppointmentId = "${param.appointment_id}" ? "${param.appointment_id}" : "";
+
+
     // Hàm tải lịch hẹn
     function loadAppointments(patientId) {
       appointmentSelect.innerHTML = '<option value="">-- Đang tải lịch hẹn... --</option>';
@@ -227,19 +231,24 @@
                 })
                 .then(data => {
                   appointmentSelect.innerHTML = '<option value="">-- Chọn lịch hẹn --</option>';
+
                   data.forEach(function(app) {
                     var option = document.createElement("option");
                     option.value = app.appointment_id;
-                    option.text = "ID: " + app.appointment_id + " | " + app.appointment_date + " | " + app.status;
-                    // Giữ lại option được chọn nếu có lỗi (dựa trên param)
-                    if ("${param.appointment_id}" === app.appointment_id.toString()) {
+                    option.text = `[Mã: ${app.appointment_code}] - Ngày: ${app.appointment_date}`;
+
+                    // SỬ DỤNG BIẾN JS ĐÃ LẤY TRƯỚC ĐÓ ĐỂ CHỌN OPTION
+                    if (initialAppointmentId && initialAppointmentId === app.appointment_id.toString()) {
                       option.selected = true;
                     }
+
                     appointmentSelect.add(option);
                   });
+
                   if (data.length === 0) {
                     appointmentSelect.innerHTML = '<option value="">-- Không có lịch hẹn phù hợp --</option>';
                   }
+
                 })
                 .catch(err => {
                   console.error("Lỗi khi tải lịch hẹn:", err);
@@ -252,6 +261,8 @@
 
     // Xử lý sự kiện thay đổi
     patientSelect.addEventListener("change", function() {
+      // Khi thay đổi bệnh nhân, xóa ID lịch hẹn cũ đã chọn
+      initialAppointmentId = "";
       loadAppointments(this.value);
     });
 

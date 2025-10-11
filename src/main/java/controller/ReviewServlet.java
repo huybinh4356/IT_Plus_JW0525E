@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @WebServlet("/reviews")
 public class ReviewServlet extends HttpServlet {
@@ -26,6 +28,15 @@ public class ReviewServlet extends HttpServlet {
     public void init() throws ServletException {
         super.init();
         reviewService = ReviewService.getInstance();
+    }
+
+    private void sendRedirectWithMessage(HttpServletRequest req, HttpServletResponse resp, String url, String message, boolean isError) throws IOException {
+        if (isError) {
+            req.getSession().setAttribute("error", message);
+        } else {
+            req.getSession().setAttribute("message", message);
+        }
+        resp.sendRedirect(url);
     }
 
     private boolean isAuthorized(HttpServletRequest req) {
@@ -74,7 +85,7 @@ public class ReviewServlet extends HttpServlet {
         Integer roleId = (session != null) ? (Integer) session.getAttribute("userRoleId") : null;
 
         if (roleId == null || (roleId != 1 && roleId != 3)) {
-            resp.sendRedirect(req.getContextPath() + "/login?error=access_denied_action");
+            sendRedirectWithMessage(req, resp, req.getContextPath() + "/login", "Bạn không có quyền thực hiện hành động này.", true);
             return;
         }
 
@@ -119,6 +130,7 @@ public class ReviewServlet extends HttpServlet {
 
             } catch (Exception e) {
                 System.err.println("Lỗi tái tải dữ liệu dropdown: " + e.getMessage());
+                req.setAttribute("loadError", "Lỗi tải dữ liệu liên quan.");
             }
         }
 
@@ -129,7 +141,9 @@ public class ReviewServlet extends HttpServlet {
         List<Reviews> reviews = null;
         try {
             reviews = reviewService.getAllReviews();
-            if (reviews != null) {
+            if (reviews == null) {
+                reviews = new ArrayList<>();
+            } else {
                 reviews = reviews.stream()
                         .filter(r -> r != null)
                         .collect(Collectors.toList());
@@ -137,8 +151,6 @@ public class ReviewServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             req.setAttribute("error", "Đã xảy ra lỗi khi tải dữ liệu đánh giá: " + e.getMessage());
-        }
-        if (reviews == null) {
             reviews = new ArrayList<>();
         }
         req.setAttribute("reviews", reviews);
@@ -146,69 +158,61 @@ public class ReviewServlet extends HttpServlet {
     }
 
     private void showDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String listUrl = req.getContextPath() + "/reviews";
         try {
             int id = Integer.parseInt(req.getParameter("id"));
             Reviews review = reviewService.getReviewById(id);
 
             if (review != null) {
-
-                // Các dòng "force loading" đã được khôi phục
-                if (review.getPatient() != null) {
-                    review.getPatient().getUser_id();
-                    review.getPatient().getFull_name();
-                }
-                if (review.getService() != null) {
-                    review.getService().getService_id();
-                    review.getService().getService_name();
-                }
-                if (review.getAppointment() != null) {
-                    review.getAppointment().getAppointment_id();
-                    review.getAppointment().getAppointment_code();
-                }
+                if (review.getPatient() != null) review.getPatient().getFull_name();
+                if (review.getService() != null) review.getService().getService_name();
+                if (review.getAppointment() != null) review.getAppointment().getAppointment_code();
 
                 req.setAttribute("review", review);
                 req.getRequestDispatcher(DETAIL_PAGE).forward(req, resp);
             } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy đánh giá.");
+                sendRedirectWithMessage(req, resp, listUrl, "Không tìm thấy đánh giá ID: " + id, true);
             }
         } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID không hợp lệ.");
+            sendRedirectWithMessage(req, resp, listUrl, "ID đánh giá không hợp lệ.", true);
         } catch (Exception e) {
             e.printStackTrace();
-            req.setAttribute("error", "Lỗi khi tải chi tiết đánh giá (Có thể do dữ liệu không hợp lệ): " + e.getMessage());
-            req.getRequestDispatcher(LIST_PAGE).forward(req, resp);
+            sendRedirectWithMessage(req, resp, listUrl, "Lỗi khi tải chi tiết đánh giá.", true);
         }
     }
 
     private void showAddForm(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Integer roleId = (Integer) req.getSession().getAttribute("userRoleId");
+        Integer patientId = (Integer) req.getSession().getAttribute("userId");
+        String loginUrl = req.getContextPath() + "/login";
+
         if (roleId == null || roleId != 3) {
-            resp.sendRedirect(req.getContextPath() + "/login?error=access_denied_add_review");
+            sendRedirectWithMessage(req, resp, loginUrl, "Bạn không có quyền thêm đánh giá.", true);
+            return;
+        }
+        if (patientId == null) {
+            sendRedirectWithMessage(req, resp, loginUrl, "Không thể xác định ID Bệnh nhân.", true);
             return;
         }
 
-        Integer patientId = (Integer) req.getSession().getAttribute("userId");
+        try {
+            List<Action_Service> services = reviewService.getServicesByPatientId(patientId);
+            List<Appointments> appointments = reviewService.getAppointmentsByPatientId(patientId);
 
-        if (patientId != null) {
-            try {
-                List<Action_Service> services = reviewService.getServicesByPatientId(patientId);
-                List<Appointments> appointments = reviewService.getAppointmentsByPatientId(patientId);
+            req.setAttribute("servicesUsed", services);
+            req.setAttribute("appointmentsUsed", appointments);
+            req.setAttribute("patient_id", patientId);
 
-                req.setAttribute("servicesUsed", services);
-                req.setAttribute("appointmentsUsed", appointments);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                req.setAttribute("error", "Lỗi tải dữ liệu liên quan: " + e.getMessage());
-            }
-        } else {
-            req.setAttribute("error", "Lỗi: Không thể xác định ID Bệnh nhân.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            req.setAttribute("error", "Lỗi tải dữ liệu liên quan: " + e.getMessage());
         }
 
         req.getRequestDispatcher(ADD_PAGE).forward(req, resp);
     }
 
     private void showEditForm(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String listUrl = req.getContextPath() + "/reviews";
         try {
             int id = Integer.parseInt(req.getParameter("id"));
             Reviews review = reviewService.getReviewById(id);
@@ -216,35 +220,31 @@ public class ReviewServlet extends HttpServlet {
             Integer patientId = (Integer) req.getSession().getAttribute("userId");
             Integer roleId = (Integer) req.getSession().getAttribute("userRoleId");
 
-            if (review != null && review.getPatient() != null) {
+            if (review == null) {
+                sendRedirectWithMessage(req, resp, listUrl, "Không tìm thấy đánh giá để sửa.", true);
+                return;
+            } else if (review.getPatient() != null) {
                 if (roleId != 1 && (roleId != 3 || review.getPatient().getUser_id() != patientId)) {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền sửa đánh giá này.");
                     return;
                 }
-            } else if (review == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy đánh giá để sửa.");
-                return;
             }
 
             if (patientId != null) {
-                try {
-                    List<Action_Service> services = reviewService.getServicesByPatientId(patientId);
-                    List<Appointments> appointments = reviewService.getAppointmentsByPatientId(patientId);
-
-                    req.setAttribute("servicesUsed", services);
-                    req.setAttribute("appointmentsUsed", appointments);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    req.setAttribute("loadError", "Lỗi tải dữ liệu liên quan cho form sửa: " + e.getMessage());
-                }
+                List<Action_Service> services = reviewService.getServicesByPatientId(patientId);
+                List<Appointments> appointments = reviewService.getAppointmentsByPatientId(patientId);
+                req.setAttribute("servicesUsed", services);
+                req.setAttribute("appointmentsUsed", appointments);
             }
 
             req.setAttribute("review", review);
             req.getRequestDispatcher(EDIT_PAGE).forward(req, resp);
 
         } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID không hợp lệ.");
+            sendRedirectWithMessage(req, resp, listUrl, "ID không hợp lệ.", true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendRedirectWithMessage(req, resp, listUrl, "Lỗi khi hiển thị form sửa.", true);
         }
     }
 
@@ -262,11 +262,10 @@ public class ReviewServlet extends HttpServlet {
 
             reviewService.addReview(patientId, serviceId, appointmentId, rating, comment);
 
-            req.getSession().setAttribute("message", "Thêm đánh giá thành công!");
-            resp.sendRedirect("reviews?action=list");
+            sendRedirectWithMessage(req, resp, "reviews", "Thêm đánh giá thành công!", false);
 
         } catch (NumberFormatException e) {
-            req.setAttribute("error", "Lỗi: ID hoặc rating không hợp lệ. Vui lòng kiểm tra lại.");
+            req.setAttribute("error", "Lỗi: ID hoặc Rating không hợp lệ. Vui lòng kiểm tra lại.");
             forwardToFormWithReloadedData(req, resp, ADD_PAGE);
         } catch (Exception e) {
             e.printStackTrace();
@@ -314,8 +313,9 @@ public class ReviewServlet extends HttpServlet {
             existingReview.setComment(comment);
 
             reviewService.updateReview(existingReview);
-            req.getSession().setAttribute("message", "Cập nhật đánh giá thành công!");
-            resp.sendRedirect("reviews?action=detail&id=" + reviewId);
+
+            String detailUrl = "reviews?action=detail&id=" + reviewId;
+            sendRedirectWithMessage(req, resp, detailUrl, "Cập nhật đánh giá thành công!", false);
 
         } catch (NumberFormatException e) {
             req.setAttribute("error", "Lỗi: Dữ liệu không hợp lệ (ID/Rating).");
@@ -328,13 +328,28 @@ public class ReviewServlet extends HttpServlet {
     }
 
     private void deleteReview(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        int id = 0;
+        String listUrl = "reviews";
         try {
-            int id = Integer.parseInt(req.getParameter("id"));
+            String idStr = req.getParameter("id");
+
+            if (idStr == null || idStr.isEmpty()) {
+                sendRedirectWithMessage(req, resp, listUrl, "ID đánh giá không được tìm thấy.", true);
+                return;
+            }
+
+            id = Integer.parseInt(idStr);
+
             reviewService.deleteReview(id);
-            req.getSession().setAttribute("message", "Xóa đánh giá thành công!");
-            resp.sendRedirect("reviews?action=list");
+
+            sendRedirectWithMessage(req, resp, listUrl, "Xóa đánh giá ID " + id + " thành công!", false);
+
         } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID không hợp lệ.");
+            sendRedirectWithMessage(req, resp, listUrl, "ID đánh giá không hợp lệ.", true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            String errorMessage = "Không thể xóa đánh giá ID " + id + ". Lỗi hệ thống hoặc ràng buộc dữ liệu.";
+            sendRedirectWithMessage(req, resp, listUrl, errorMessage, true);
         }
     }
 }

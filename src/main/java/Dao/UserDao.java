@@ -91,6 +91,28 @@ public class UserDao {
         return list;
     }
 
+    // ⭐ PHƯƠNG THỨC ĐƯỢC THÊM: Tìm User theo Role ID
+    public List<User> findByRoleId(int roleId) {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT u.*, s.name as specialty_name, s.description as specialty_description " +
+                "FROM users u LEFT JOIN specialties s ON u.specialty_id = s.specialty_id " +
+                "WHERE u.role_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, roleId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToUser(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
     // =============================================================
     // LẤY THEO ID/USERNAME (READ SINGLE)
     // =============================================================

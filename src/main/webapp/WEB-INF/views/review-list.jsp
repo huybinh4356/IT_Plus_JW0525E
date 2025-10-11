@@ -183,18 +183,21 @@
         </c:choose>
     </div>
 
-    <c:if test="${not empty message}">
+    <%-- Sửa lại: Lấy thông báo từ sessionScope --%>
+    <c:if test="${not empty sessionScope.message}">
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-check-circle me-2"></i> ${message}
+            <i class="fas fa-check-circle me-2"></i> ${sessionScope.message}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+        <c:remove var="message" scope="session"/>
     </c:if>
 
-    <c:if test="${not empty error}">
+    <c:if test="${not empty sessionScope.error}">
         <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i> ${error}
+            <i class="fas fa-exclamation-triangle me-2"></i> ${sessionScope.error}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+        <c:remove var="error" scope="session"/>
     </c:if>
 
     <div class="card card-table">
@@ -242,13 +245,17 @@
                                             </a>
 
                                             <c:if test="${sessionScope.userRoleId == 1}">
-<%--                                                <a href="reviews?action=showEditForm&id=${review.review_id}" class="btn btn-sm btn-warning me-1">--%>
-<%--                                                    <i class="fas fa-edit"></i> Sửa--%>
-<%--                                                </a>--%>
-                                                <a href="reviews?action=delete&id=${review.review_id}" class="btn btn-sm btn-danger"
-                                                   onclick="return confirm('Bạn có chắc muốn xóa đánh giá ID: ${review.review_id} này không?');">
-                                                    <i class="fas fa-trash-alt"></i> Xóa
-                                                </a>
+                                                <%-- CHUYỂN NÚT XÓA TỪ <a> (GET) SANG <form> (POST) --%>
+                                                <form action="reviews" method="POST" class="d-inline"
+                                                      onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá ID: ${review.review_id} này không?');">
+
+                                                    <input type="hidden" name="action" value="delete"/>
+                                                    <input type="hidden" name="id" value="${review.review_id}"/>
+
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fas fa-trash-alt"></i> Xóa
+                                                    </button>
+                                                </form>
                                             </c:if>
                                         </td>
                                     </c:if>

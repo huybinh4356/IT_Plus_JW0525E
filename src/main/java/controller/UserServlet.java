@@ -19,9 +19,6 @@ public class UserServlet extends HttpServlet {
     private final UserService userService = UserService.getInstance();
     private final SpecialtiesService specialtiesService = SpecialtiesService.getInstance();
 
-    /**
-     * Lấy Role ID từ Session.
-     */
     private Integer getRoleId(HttpServletRequest request) {
         Object roleIdObj = request.getSession().getAttribute("userRoleId");
         if (roleIdObj instanceof Integer) {
@@ -30,17 +27,21 @@ public class UserServlet extends HttpServlet {
         return null;
     }
 
-    /**
-     * Kiểm tra xem người dùng có phải là Admin (Role ID 1) hay không.
-     * Chỉ Admin mới được thực hiện các thao tác CRUD nhạy cảm và xem danh sách đầy đủ.
-     */
     private boolean isAdmin(HttpServletRequest request) {
         Integer roleId = getRoleId(request);
         return roleId != null && roleId == 1;
     }
 
+    // Hàm tiện ích chuyển hướng với thông báo
+    private void sendRedirectWithMessage(HttpServletResponse response, String url, String message, boolean isError) throws IOException {
+        String separator = url.contains("?") ? "&" : "?";
+        String type = isError ? "error" : "message";
+        String encodedMessage = java.net.URLEncoder.encode(message, java.nio.charset.StandardCharsets.UTF_8.toString());
+        response.sendRedirect(url + separator + type + "=" + encodedMessage);
+    }
+
     // =================================================================
-    // DO GET
+    // DO GET (Không thay đổi logic chính)
     // =================================================================
 
     @Override
@@ -50,20 +51,16 @@ public class UserServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Integer userRoleId = getRoleId(request);
         Integer currentUserId = (Integer) session.getAttribute("userId");
+        String contextPath = request.getContextPath();
 
-        // 1. Kiểm tra đăng nhập
         if (userRoleId == null || currentUserId == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.sendRedirect(contextPath + "/login");
             return;
         }
 
         String action = request.getParameter("action");
         if (action == null) action = "list";
 
-        // 2. LOGIC CHẶN CÁC THAO TÁC CRUD NẾU KHÔNG PHẢI ADMIN (Role 1)
-
-        // Các action nhạy cảm: addForm, editForm, delete.
-        // Action 'list' được xử lý khác vì Role 2, 3 được phép truy cập nhưng sẽ bị lọc dữ liệu.
         if (("addForm".equals(action) || "editForm".equals(action) || "delete".equals(action))) {
             if (userRoleId != 1) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện chức năng này.");
@@ -71,25 +68,23 @@ public class UserServlet extends HttpServlet {
             }
         }
 
-        // 3. ADMIN ĐƯỢC PHÉP THỰC HIỆN TẤT CẢ, ROLE 2, 3 CHỈ ĐƯỢC VIEW CHI TIẾT VÀ LIST (CÓ LỌC)
-
         try {
             switch (action) {
                 case "addForm":
-                    showAddForm(request, response); // Chỉ Admin
+                    showAddForm(request, response);
                     break;
                 case "editForm":
-                    showEditForm(request, response); // Chỉ Admin
+                    showEditForm(request, response);
                     break;
                 case "detail":
-                    viewUser(request, response); // Tất cả các Role
+                    viewUser(request, response);
                     break;
                 case "delete":
-                    deleteUser(request, response); // Chỉ Admin
+                    deleteUser(request, response);
                     break;
                 case "list":
                 default:
-                    listUsers(request, response); // Tất cả các Role (Role 2, 3 sẽ bị lọc dữ liệu)
+                    listUsers(request, response);
                     break;
             }
         } catch (Exception e) {
@@ -99,7 +94,7 @@ public class UserServlet extends HttpServlet {
     }
 
     // =================================================================
-    // DO POST
+    // DO POST (Không thay đổi logic chính)
     // =================================================================
 
     @Override
@@ -107,7 +102,6 @@ public class UserServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
-        // Chặn tất cả thực hiện POST (Thêm/Sửa/Xóa) nếu KHÔNG phải Admin.
         if (!isAdmin(request)) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện chức năng này.");
             return;
@@ -122,7 +116,7 @@ public class UserServlet extends HttpServlet {
                     insertUser(request, response);
                     break;
                 case "update":
-                    updateUser(request, response);
+                    updateUser(request, response); // LOGIC CHÍNH ĐÃ SỬA
                     break;
                 default:
                     response.sendRedirect("users");
@@ -135,14 +129,12 @@ public class UserServlet extends HttpServlet {
     }
 
     // ----------------------------------------------------------------------
-    /**
-     * Lọc danh sách người dùng hiển thị dựa trên vai trò (Role).
-     * Role 1 (Admin) -> Xem tất cả.
-     * Role 2 (Bác sĩ) & Role 3 (Bệnh nhân) -> Chỉ xem hồ sơ của chính họ.
-     */
+    // Các phương thức khác (listUsers, showAddForm, showEditForm, viewUser, insertUser)
+    // Giữ nguyên hoặc chỉ thay đổi chút ít
+    // ----------------------------------------------------------------------
+
     private void listUsers(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         HttpSession session = request.getSession();
         Integer userRoleId = (Integer) session.getAttribute("userRoleId");
         Integer currentUserId = (Integer) session.getAttribute("userId");
@@ -150,46 +142,41 @@ public class UserServlet extends HttpServlet {
         List<User> list;
 
         if (userRoleId != null && userRoleId == 1) {
-            // Role 1 (Admin): Lấy tất cả người dùng và áp dụng tìm kiếm
             String searchType = request.getParameter("searchType");
             String keyword = request.getParameter("keyword");
 
             if (searchType != null && !searchType.isEmpty() && keyword != null && !keyword.isEmpty()) {
-                // Giả định bạn có hàm tìm kiếm trong service
                 list = userService.searchUsers(searchType, keyword);
             } else {
                 list = userService.getAllUsers();
             }
         } else if (userRoleId != null && (userRoleId == 2 || userRoleId == 3)) {
-            // Role 2 (Bác sĩ) hoặc Role 3 (Bệnh nhân): Chỉ lấy hồ sơ của chính họ
             User selfUser = userService.findById(currentUserId);
             list = new ArrayList<>();
             if (selfUser != null) {
                 list.add(selfUser);
             }
-            // Không thực hiện tìm kiếm cho Role 2, 3 vì họ chỉ thấy 1 record
         } else {
-            // Trường hợp lỗi hoặc Role không xác định
             list = new ArrayList<>();
         }
 
         request.setAttribute("users", list);
         request.getRequestDispatcher("/WEB-INF/views/user-list.jsp").forward(request, response);
     }
-    // ----------------------------------------------------------------------
+
     private void showAddForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Chỉ Admin được truy cập
         List<Specialties> specialties = specialtiesService.findAll();
         request.setAttribute("specialties", specialties);
-        request.setAttribute("user", new User());
+        // Kiểm tra nếu có dữ liệu lỗi cũ từ forward
+        if (request.getAttribute("user") == null) {
+            request.setAttribute("user", new User());
+        }
         request.getRequestDispatcher("/WEB-INF/views/add-user.jsp").forward(request, response);
     }
 
-    // ----------------------------------------------------------------------
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Chỉ Admin được truy cập
         int id = parseId(request, response);
         if (id == -1) return;
 
@@ -201,14 +188,12 @@ public class UserServlet extends HttpServlet {
             request.setAttribute("specialties", specialties);
             request.getRequestDispatcher("/WEB-INF/views/edit-user.jsp").forward(request, response);
         } else {
-            response.sendRedirect("users?error=User_not_found");
+            sendRedirectWithMessage(response, "users", "Không tìm thấy người dùng ID: " + id, true);
         }
     }
 
-    // ----------------------------------------------------------------------
     private void viewUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Tất cả các Role đều có thể xem chi tiết
         int targetUserId = parseId(request, response);
         if (targetUserId == -1) return;
 
@@ -216,7 +201,6 @@ public class UserServlet extends HttpServlet {
         Integer viewerRoleId = (Integer) session.getAttribute("userRoleId");
         Integer currentUserId = (Integer) session.getAttribute("userId");
 
-        // Phân quyền: Role 2, 3 chỉ được xem hồ sơ của chính mình
         if ((viewerRoleId == 2 || viewerRoleId == 3) && targetUserId != currentUserId) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền xem hồ sơ người dùng khác.");
             return;
@@ -229,18 +213,16 @@ public class UserServlet extends HttpServlet {
             request.setAttribute("user", user);
             request.getRequestDispatcher("/WEB-INF/views/user-detail.jsp").forward(request, response);
         } else {
-            response.sendRedirect("users?error=User_not_found");
+            sendRedirectWithMessage(response, "users", "Không tìm thấy người dùng chi tiết.", true);
         }
     }
 
-    // ----------------------------------------------------------------------
     private void insertUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Chỉ Admin được truy cập
         String username = request.getParameter("username");
 
         if (userService.isUsernameExists(username)) {
-            setFormDataAttributes(request);
+            setFormDataAttributes(request); // Giữ lại dữ liệu đã nhập
             request.setAttribute("error", "Tên đăng nhập '" + username + "' đã tồn tại. Vui lòng chọn tên khác.");
             request.getRequestDispatcher("/WEB-INF/views/add-user.jsp").forward(request, response);
             return;
@@ -252,7 +234,7 @@ public class UserServlet extends HttpServlet {
         boolean isAdded = userService.addUser(user);
 
         if (isAdded) {
-            response.sendRedirect("users?message=add_success");
+            sendRedirectWithMessage(response, "users", "Thêm người dùng thành công.", false);
         } else {
             setFormDataAttributes(request);
             request.setAttribute("error", "Đã xảy ra lỗi khi thêm người dùng. Vui lòng thử lại.");
@@ -261,35 +243,47 @@ public class UserServlet extends HttpServlet {
     }
 
     // ----------------------------------------------------------------------
+    // PHƯƠNG THỨC ĐÃ SỬA LỖI: ĐẢM BẢO ID VÀ FORM DATA ĐƯỢC GIỮ LẠI KHI CÓ LỖI
+    // ----------------------------------------------------------------------
     private void updateUser(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         // Chỉ Admin được truy cập
+        int userId = 0;
         try {
-            int userId = parseId(request, response);
-            if (userId == -1) return;
+            userId = parseId(request, response);
+            if (userId == -1) return; // Đã chuyển hướng trong parseId
 
-            User user = buildUserFromRequest(request);
-            user.setUser_id(userId);
+            // Tải dữ liệu từ Request và áp dụng lên một đối tượng User mới
+            User userUpdateData = buildUserFromRequest(request);
+            userUpdateData.setUser_id(userId);
 
+            // Xử lý mật khẩu
             String newPassword = request.getParameter("password_hash");
             if (newPassword != null && !newPassword.isEmpty()) {
-                user.setPassword_hash(newPassword);
+                userUpdateData.setPassword_hash(newPassword);
             } else {
-                user.setPassword_hash(null); // Giữ lại mật khẩu cũ nếu không nhập mới
+                userUpdateData.setPassword_hash(null); // Giữ lại mật khẩu cũ nếu null
             }
 
-            boolean isUpdated = userService.updateUser(user);
+            boolean isUpdated = userService.updateUser(userUpdateData);
 
             if (isUpdated) {
-                response.sendRedirect("users?message=update_success");
+                sendRedirectWithMessage(response, "users?action=detail&id=" + userId, "Cập nhật người dùng thành công.", false);
             } else {
-                request.setAttribute("error", "Đã xảy ra lỗi khi cập nhật người dùng.");
-                request.setAttribute("user", user);
-                request.setAttribute("specialties", specialtiesService.findAll());
+                // Lỗi cập nhật DB thất bại (ví dụ: duplicate key, lỗi kết nối)
+                request.setAttribute("error", "Đã xảy ra lỗi khi cập nhật người dùng. Vui lòng thử lại.");
+                // Tái tải dữ liệu cho form
+                setFormDataAttributes(request);
                 request.getRequestDispatcher("/WEB-INF/views/edit-user.jsp").forward(request, response);
             }
+        } catch (NumberFormatException e) {
+            // Lỗi ID không hợp lệ (xảy ra khi gọi parseId)
+            sendRedirectWithMessage(response, "users", "Lỗi ID người dùng không hợp lệ.", true);
         } catch (Exception e) {
-            request.setAttribute("error", "Lỗi: " + e.getMessage());
+            e.printStackTrace();
+            // Lỗi khác (ví dụ: lỗi parse LocalDate trong buildUserFromRequest)
+            request.setAttribute("error", "Lỗi: Dữ liệu không hợp lệ. Vui lòng kiểm tra lại định dạng Ngày sinh/Role/Chuyên môn.");
+            // Tái tải dữ liệu cho form, sử dụng dữ liệu request hiện tại
             setFormDataAttributes(request);
             request.getRequestDispatcher("/WEB-INF/views/edit-user.jsp").forward(request, response);
         }
@@ -298,45 +292,59 @@ public class UserServlet extends HttpServlet {
     // ----------------------------------------------------------------------
     private void deleteUser(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        // Chỉ Admin được truy cập
         int id = parseId(request, response);
         if (id == -1) return;
 
-        userService.deleteUser(id);
-        response.sendRedirect("users?message=delete_success");
+        try {
+            userService.deleteUser(id);
+            sendRedirectWithMessage(response, "users", "Xóa người dùng ID " + id + " thành công.", false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendRedirectWithMessage(response, "users", "Lỗi khi xóa người dùng ID " + id + ". Vui lòng kiểm tra ràng buộc.", true);
+        }
     }
 
     // ----------------------------------------------------------------------
-    /**
-     * Phương thức tiện ích để phân tích ID từ request parameter.
-     */
+    // PHƯƠNG THỨC ĐÃ SỬA LỖI: ĐẢM BẢO ID ĐƯỢC PHÂN TÍCH ĐÚNG CÁCH CHO EDIT FORM
+    // ----------------------------------------------------------------------
     private int parseId(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Lấy ID từ tham số 'id' (GET: showEditForm, delete) hoặc 'user_id' (POST: updateUser)
         String idParam = request.getParameter("id");
         if (idParam == null || idParam.isEmpty()) {
-            // Trong trường hợp này, không chuyển hướng mà chỉ trả về -1 để logic gọi xử lý
+            idParam = request.getParameter("user_id"); // Giả định form POST có trường user_id
+        }
+
+        if (idParam == null || idParam.isEmpty()) {
+            // Nếu không tìm thấy ID, chuyển hướng về danh sách
+            sendRedirectWithMessage(response, "users", "Thiếu ID người dùng cần xử lý.", true);
             return -1;
         }
         try {
             return Integer.parseInt(idParam);
         } catch (NumberFormatException e) {
-            response.sendRedirect("users?error=Invalid_id_format");
+            sendRedirectWithMessage(response, "users", "ID người dùng không hợp lệ.", true);
             return -1;
         }
     }
 
     // ----------------------------------------------------------------------
-    /**
-     * Phương thức tiện ích để thiết lập lại các thuộc tính dữ liệu form (ví dụ: khi có lỗi nhập).
-     */
+    // PHƯƠNG THỨC ĐÃ SỬA LỖI: TÁI TẠO DỮ LIỆU ĐÚNG CÁCH CHO FORM LỖI
+    // ----------------------------------------------------------------------
     private void setFormDataAttributes(HttpServletRequest request) {
         List<Specialties> specialties = specialtiesService.findAll();
         request.setAttribute("specialties", specialties);
 
         User tempUser = buildUserFromRequest(request);
 
-        if ("update".equals(request.getParameter("action")) && request.getParameter("id") != null) {
+        // Đảm bảo user_id được đặt lại cho form chỉnh sửa
+        String idParam = request.getParameter("id");
+        if (idParam == null || idParam.isEmpty()) {
+            idParam = request.getParameter("user_id");
+        }
+
+        if (idParam != null && !idParam.isEmpty()) {
             try {
-                tempUser.setUser_id(Integer.parseInt(request.getParameter("id")));
+                tempUser.setUser_id(Integer.parseInt(idParam));
             } catch (NumberFormatException e) { /* Bỏ qua lỗi parse */ }
         }
 
@@ -344,9 +352,8 @@ public class UserServlet extends HttpServlet {
     }
 
     // ----------------------------------------------------------------------
-    /**
-     * Phương thức tiện ích để xây dựng đối tượng User từ request parameters.
-     */
+    // Giữ nguyên buildUserFromRequest
+    // ----------------------------------------------------------------------
     private User buildUserFromRequest(HttpServletRequest request) {
         User user = new User();
         user.setUsername(request.getParameter("username"));

@@ -140,4 +140,12 @@ public class UserService {
         }
         return userDao.isUsernameExists(username);
     }
+
+    // ⭐ PHƯƠNG THỨC MỚI: Lấy danh sách User theo Role ID
+    public List<User> getUsersByRole(int roleId) {
+        if (roleId <= 0) {
+            return Collections.emptyList();
+        }
+        return userDao.findByRoleId(roleId);
+    }
 }

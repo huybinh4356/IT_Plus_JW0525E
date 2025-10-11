@@ -206,7 +206,7 @@
                 <hr>
 
                 <p class="small text-muted mt-3 mb-4">
-                    <i class="fas fa-clock me-1"></i> **Ngày tạo:** <fmt:formatDate value="${record.created_at}" pattern="HH:mm dd-MM-yyyy"/>
+                    <i class="fas fa-clock me-1"></i> **Ngày tạo:** <fmt:formatDate value="${record.createdAtTimestamp}" pattern="HH:mm dd-MM-yyyy"/>
                 </p>
 
                     <%-- Nút hành động --%>

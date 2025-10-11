@@ -245,16 +245,4 @@ public class AppointmentService {
             throw new RuntimeException("Xóa lịch hẹn thất bại do lỗi cơ sở dữ liệu: " + e.getMessage(), e);
         }
     }
-
-    public List<Appointments> getAppointmentsByPatientId(int patientId) {
-        if (patientId <= 0) {
-            throw new IllegalArgumentException("Patient ID không hợp lệ.");
-        }
-        try {
-            return appointmentDao.getAppointmentsByPatientId(patientId);
-        } catch (RuntimeException e) {
-            logger.log(Level.SEVERE, "Lỗi hệ thống khi tìm lịch hẹn theo Patient ID: " + patientId, e);
-            throw new RuntimeException("Lỗi hệ thống khi tìm lịch hẹn.", e);
-        }
-    }
 }

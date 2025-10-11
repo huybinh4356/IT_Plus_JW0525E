@@ -1,7 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="model.Action_Service" %>
 <%
+    // Lấy đối tượng dịch vụ từ request.getAttribute
     Action_Service service = (Action_Service) request.getAttribute("service");
+    // Kiểm tra null để tránh lỗi NullPointerException khi truy cập thuộc tính
+    if (service == null) {
+        response.sendRedirect(request.getContextPath() + "/services?error=Dich_vu_khong_ton_tai_hoac_loi_tai_du_lieu");
+        return;
+    }
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -21,6 +27,7 @@
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            /* Thay đổi đường dẫn ảnh nền nếu cần thiết */
             background-image: url('${pageContext.request.contextPath}/assets/images/img_1.png');
             background-size: cover;
             background-position: center;
@@ -29,7 +36,7 @@
         }
 
         .container {
-            max-width: 800px; /* Điều chỉnh max-width cho form cập nhật */
+            max-width: 800px;
             width: 100%;
             padding-top: 50px;
             padding-bottom: 50px;
@@ -51,7 +58,7 @@
             text-align: center;
             margin-bottom: 30px;
             position: relative;
-            font-size: 2rem; /* Điều chỉnh kích thước tiêu đề */
+            font-size: 2rem;
         }
         h1::after {
             content: '';
@@ -136,9 +143,15 @@
     <div class="card-form">
         <h1>Cập nhật dịch vụ</h1>
 
-        <form action="ServiceServlet" method="post">
+        <% if (request.getAttribute("error") != null) { %>
+        <div class="alert alert-danger" role="alert">
+            <strong>Lỗi:</strong> <%= request.getAttribute("error") %>
+        </div>
+        <% } %>
+
+        <form action="<%= request.getContextPath() %>/services" method="post">
             <input type="hidden" name="action" value="update"/>
-            <input type="hidden" name="id" value="<%= service.getService_id() %>"/>
+            <input type="hidden" name="service_id" value="<%= service.getService_id() %>"/>
 
             <div class="mb-3">
                 <label class="form-label">Tên dịch vụ</label>
@@ -189,20 +202,20 @@
 
             <div class="mb-3">
                 <label class="form-label">Giá</label>
-                <input type="number" step="1000" name="price" class="form-control"
+                <input type="number" step="0.01" name="price" class="form-control"
                        value="<%= service.getPrice() %>" required/>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Trạng thái</label>
                 <select name="is_active" class="form-select">
-                    <option value="true" <%= service.isIs_active() ? "selected" : "" %>>Kích hoạt</option>
-                    <option value="false" <%= !service.isIs_active() ? "selected" : "" %>>Ngừng hoạt động</option>
+                    <option value="1" <%= service.isIs_active() ? "selected" : "" %>>Kích hoạt</option>
+                    <option value="0" <%= !service.isIs_active() ? "selected" : "" %>>Ngừng hoạt động</option>
                 </select>
             </div>
 
             <button type="submit" class="btn btn-success me-2">Cập nhật</button>
-            <a href="ServiceServlet?action=list" class="btn btn-secondary">Quay lại</a>
+            <a href="<%= request.getContextPath() %>/services?action=list" class="btn btn-secondary">Quay lại</a>
         </form>
     </div>
 </div>
