@@ -1,0 +1,44 @@
+
+
+import DAO.CategoryDAO;
+import java.util.List;
+import model.Category;
+public class CategoryService {
+    private final CategoryDAO categoryDAO;
+    private static CategoryService cs;
+
+    public static CategoryService getInstance() {
+        if (cs == null) {
+            cs = new CategoryService();
+        }
+        return cs;
+    }
+
+    private CategoryService() {
+        this.categoryDAO = CategoryDAO.getInstance();
+    }
+
+    public List<Category> findAll() {
+        return categoryDAO.findAll();
+    }
+
+    public Category findById(int id) {
+        return categoryDAO.findByID(id);
+    }
+
+    public void addCategory(Category c) {
+        categoryDAO.addCategory(c);
+    }
+
+    public void updateCategory(Category c) {
+        Category category = categoryDAO.findByID(c.getId());
+        if (category != null) {
+            categoryDAO.updateCategory(c);
+        }
+    }
+
+    public boolean deleteCategory(int id) {
+        int check = categoryDAO.deleteCategory(id);
+        return check != -1;
+    }
+}
