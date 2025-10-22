@@ -190,7 +190,7 @@
             <button type="submit" class="btn btn-success w-50">
                 <i class="fas fa-paper-plane me-2"></i> Gửi Yêu cầu
             </button>
-            <a href="<c:url value='/guest-requests'/>" class="btn btn-secondary w-50">
+            <a href="<c:url value='/home'/>" class="btn btn-secondary w-50">
                 <i class="fas fa-times me-2"></i> Hủy
             </a>
         </div>

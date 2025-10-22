@@ -360,7 +360,7 @@
         </div>
 
         <div class="mt-5">
-            <a href="<c:url value='/service_demo_list?action=list'/>" class="btn btn-outline-primary btn-lg">Xem tất cả Dịch vụ</a>
+            <a href="<c:url value='/services?action=list'/>" class="btn btn-outline-primary btn-lg">Xem tất cả Dịch vụ</a>
         </div>
     </div>
 
