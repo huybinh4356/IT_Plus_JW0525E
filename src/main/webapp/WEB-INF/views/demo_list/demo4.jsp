@@ -10,7 +10,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; font-size: 1.1rem; }
-        .section-title { font-size: 2.2rem; font-weight: 700; color: #007bff; margin-bottom: 30px; }
+        .section-title { font-size: 2.2rem; font-weight: 700; color: #007bff; margin-bottom: 30px;
+            background-image: url('${pageContext.request.contextPath}/assets/images/img_1.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
 
         .detail-hero-section {
             background-image: url('${pageContext.request.contextPath}/assets/images/img.png');

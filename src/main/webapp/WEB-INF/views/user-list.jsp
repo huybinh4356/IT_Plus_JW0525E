@@ -204,21 +204,28 @@
 
     <div class="row g-3 mb-4">
 
-      <div class="${userRole == 1 ? 'col-md-4' : 'col-md-12'}">
+      <div class="${userRole == 1 ? 'col-md-3' : 'col-md-12'}">
         <a href="${pageContext.request.contextPath}/home" class="btn btn-info w-100 shadow-sm">
           <i class="fas fa-home me-1"></i> Về Trang chủ
         </a>
       </div>
 
       <c:if test="${userRole == 1}">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <a href="${pageContext.request.contextPath}/users?action=addForm" class="btn btn-success w-100 shadow-sm">
             <i class="fas fa-plus me-1"></i> Thêm người dùng
           </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <a href="${pageContext.request.contextPath}/specialties" class="btn btn-secondary w-100 shadow-sm">
             <i class="fas fa-stethoscope me-1"></i> Quản lý chuyên khoa
+          </a>
+        </div>
+
+        <%-- NÚT XUẤT FILE CSV (Chỉ hiển thị cho Admin) --%>
+        <div class="col-md-3">
+          <a href="${pageContext.request.contextPath}/export-patients" class="btn btn-danger w-100 shadow-sm">
+            <i class="fas fa-file-csv me-1"></i> Xuất DS Bệnh nhân
           </a>
         </div>
       </c:if>
@@ -303,7 +310,22 @@
 
     if (currentSearchType !== "gender") {
       if (container.children.length === 0) {
-        container.innerHTML = '<label for="keyword" class="form-label small text-muted mb-1">Từ khóa</label><input type="text" id="keyword" name="keyword" class="form-control" placeholder="Nhập từ khóa..."/>';
+        // Khởi tạo input text nếu chưa có
+        const label = document.createElement('label');
+        label.setAttribute('for', 'keyword');
+        label.setAttribute('class', 'form-label small text-muted mb-1');
+        label.textContent = 'Từ khóa';
+        container.appendChild(label);
+
+        const input = document.createElement('input');
+        input.setAttribute('type', 'text');
+        input.setAttribute('id', 'keyword');
+        input.setAttribute('name', 'keyword');
+        input.setAttribute('class', 'form-control');
+        input.setAttribute('placeholder', 'Nhập từ khóa...');
+        // Đặt giá trị cũ nếu có
+        input.value = "${param.keyword != null ? param.keyword : ''}";
+        container.appendChild(input);
       }
     }
 

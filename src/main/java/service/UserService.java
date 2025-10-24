@@ -21,6 +21,10 @@ public class UserService {
         return instance;
     }
 
+    // ===============================================
+    // PHƯƠNG THỨC XÁC THỰC & CRUD
+    // ===============================================
+
     public User authenticate(String username, String rawPassword) {
         if (username == null || rawPassword == null || username.isEmpty() || rawPassword.isEmpty()) {
             return null;
@@ -32,6 +36,7 @@ public class UserService {
             return null;
         }
 
+        // Lưu ý: Cần sử dụng thư viện mã hóa (BCrypt) để so sánh mật khẩu thực tế.
         if (user.getPassword_hash().equals(rawPassword)) {
             return user;
         }
@@ -49,6 +54,31 @@ public class UserService {
         return userDao.addUser(user);
     }
 
+    public boolean updateUser(User user) {
+        if (user.getUser_id() <= 0) {
+            throw new IllegalArgumentException("User ID không hợp lệ để cập nhật.");
+        }
+        return userDao.updateUser(user);
+    }
+
+    public boolean deleteUser(int id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("User ID không hợp lệ.");
+        }
+        return userDao.deleteUser(id);
+    }
+
+    public boolean isUsernameExists(String username) {
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Username không được trống.");
+        }
+        return userDao.isUsernameExists(username);
+    }
+
+    // ===============================================
+    // PHƯƠNG THỨC TRUY VẤN VÀ TÌM KIẾM
+    // ===============================================
+
     public List<User> getAllUsers() {
         return userDao.getAllUsers();
     }
@@ -65,6 +95,20 @@ public class UserService {
             throw new IllegalArgumentException("CCCD không được trống.");
         }
         return userDao.findByCccd(cccd);
+    }
+
+    // ⭐ PHƯƠNG THỨC BỔ SUNG CHO CHỨC NĂNG XUẤT FILE CSV
+    public List<User> findAllPatients() {
+        final int PATIENT_ROLE_ID = 3;
+        return getUsersByRole(PATIENT_ROLE_ID);
+    }
+
+    // ⭐ PHƯƠNG THỨC BỔ SUNG CHO TÌM KIẾM THEO EMAIL
+    public List<User> findByEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return userDao.findByEmail(email);
     }
 
     public List<User> findByName(String name) {
@@ -95,6 +139,14 @@ public class UserService {
         return userDao.findByAddress(address);
     }
 
+    public List<User> getUsersByRole(int roleId) {
+        if (roleId <= 0) {
+            return Collections.emptyList();
+        }
+        return userDao.findByRoleId(roleId);
+    }
+
+
     public List<User> searchUsers(String searchType, String keyword) {
         if (keyword == null || keyword.trim().isEmpty() || searchType == null || searchType.isEmpty()) {
             return userDao.getAllUsers();
@@ -109,6 +161,8 @@ public class UserService {
                 return userDao.findByPhone(keyword);
             case "address":
                 return userDao.findByAddress(keyword);
+            case "email": // Thêm trường hợp tìm kiếm theo Email
+                return userDao.findByEmail(keyword);
             case "cccd":
                 User userByCccd = userDao.findByCccd(keyword);
                 if (userByCccd != null) {
@@ -119,33 +173,4 @@ public class UserService {
                 return userDao.getAllUsers();
         }
     }
-
-    public boolean updateUser(User user) {
-        if (user.getUser_id() <= 0) {
-            throw new IllegalArgumentException("User ID không hợp lệ để cập nhật.");
-        }
-        return userDao.updateUser(user);
-    }
-
-    public boolean deleteUser(int id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("User ID không hợp lệ.");
-        }
-        return userDao.deleteUser(id);
-    }
-
-    public boolean isUsernameExists(String username) {
-        if (username == null || username.isEmpty()) {
-            throw new IllegalArgumentException("Username không được trống.");
-        }
-        return userDao.isUsernameExists(username);
-    }
-
-    // ⭐ PHƯƠNG THỨC MỚI: Lấy danh sách User theo Role ID
-    public List<User> getUsersByRole(int roleId) {
-        if (roleId <= 0) {
-            return Collections.emptyList();
-        }
-        return userDao.findByRoleId(roleId);
-    }
-}
+}   

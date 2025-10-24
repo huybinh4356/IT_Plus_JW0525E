@@ -1,8 +1,8 @@
 package Dao;
 
-import Dao.MySql_JDBC.Connection_DreamTooth;
 import model.Specialties;
 import model.User;
+import Dao.MySql_JDBC.Connection_DreamTooth;
 
 import java.sql.*;
 import java.time.format.DateTimeFormatter;
@@ -71,7 +71,7 @@ public class UserDao {
     }
 
     // =============================================================
-    // LẤY TẤT CẢ (READ ALL)
+    // LẤY TẤT CẢ & THEO ROLE (READ ALL)
     // =============================================================
     public List<User> getAllUsers() {
         List<User> list = new ArrayList<>();
@@ -91,7 +91,6 @@ public class UserDao {
         return list;
     }
 
-    // ⭐ PHƯƠNG THỨC ĐƯỢC THÊM: Tìm User theo Role ID
     public List<User> findByRoleId(int roleId) {
         List<User> list = new ArrayList<>();
         String sql = "SELECT u.*, s.name as specialty_name, s.description as specialty_description " +
@@ -113,6 +112,7 @@ public class UserDao {
         }
         return list;
     }
+
     // =============================================================
     // LẤY THEO ID/USERNAME (READ SINGLE)
     // =============================================================
@@ -177,7 +177,7 @@ public class UserDao {
     }
 
     // =============================================================
-    // TÌM KIẾM (SEARCH)
+    // TÌM KIẾM THEO THUỘC TÍNH (SEARCH)
     // =============================================================
     public List<User> findByName(String name) {
         List<User> list = new ArrayList<>();
@@ -209,6 +209,27 @@ public class UserDao {
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, gender);
+
+            try(ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToUser(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<User> findByEmail(String email) {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT u.*, s.name as specialty_name, s.description as specialty_description " +
+                "FROM users u LEFT JOIN specialties s ON u.specialty_id = s.specialty_id " +
+                "WHERE u.email LIKE ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%" + email + "%");
 
             try(ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -345,6 +366,7 @@ public class UserDao {
         }
         return false;
     }
+
     private User mapResultSetToUser(ResultSet rs) {
         try {
             User user = new User();
@@ -376,7 +398,7 @@ public class UserDao {
                 try {
                     sp.setName(rs.getString("specialty_name"));
                     sp.setDescription(rs.getString("specialty_description"));
-                } catch (SQLException ignored) {} // Bỏ qua nếu cột JOIN không tồn tại
+                } catch (SQLException ignored) {}
 
                 user.setSpecialty(sp);
             }
@@ -399,5 +421,4 @@ public class UserDao {
         }
         return null;
     }
-
 }

@@ -33,7 +33,7 @@ public class ClinicInfoServlet extends HttpServlet {
                 showNewForm(request, response);
                 break;
             case "edit":
-                showEditForm(request, response);
+                showEditForm(request, response); // Đã hoàn thiện logic này
                 break;
             case "delete":
                 deleteClinic(request, response);
@@ -79,7 +79,7 @@ public class ClinicInfoServlet extends HttpServlet {
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // 3. Sửa đường dẫn forward
+        // Form mới không cần dữ liệu sẵn
         request.getRequestDispatcher("/WEB-INF/views/clinic-form.jsp").forward(request, response);
     }
 
@@ -99,26 +99,26 @@ public class ClinicInfoServlet extends HttpServlet {
                 working_hours, description, logo);
         clinicInfoService.addClinicInfo(newClinic);
 
-        // 4. Sửa đường dẫn redirect: Sử dụng URL mapping mới "/clinic-info"
         response.sendRedirect(request.getContextPath() + "/clinic-info?action=list");
     }
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // *Chú ý quan trọng: Bổ sung logic lấy ID và tìm kiếm đối tượng để điền vào Form!*
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            // **Yêu cầu Bổ sung vào Service/DAO:** ClinicInfo clinic = clinicInfoService.findById(id);
-            // request.setAttribute("clinic", clinic);
+
+            // ✅ BỔ SUNG: Gọi Service để lấy đối tượng theo ID
+            ClinicInfo clinic = clinicInfoService.findById(id);
+
+            // Đặt đối tượng vào request để Form điền dữ liệu
+            request.setAttribute("clinic", clinic);
 
         } catch (NumberFormatException e) {
-            // Xử lý nếu ID không hợp lệ
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID phòng khám không hợp lệ.");
             return;
         }
 
-        // 5. Sửa đường dẫn forward
         request.getRequestDispatcher("/WEB-INF/views/clinic-form.jsp").forward(request, response);
     }
 
@@ -126,7 +126,6 @@ public class ClinicInfoServlet extends HttpServlet {
             throws IOException {
         request.setCharacterEncoding("UTF-8");
 
-        // Đảm bảo id tồn tại và là số hợp lệ
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             String name = request.getParameter("name");
@@ -141,12 +140,10 @@ public class ClinicInfoServlet extends HttpServlet {
                     working_hours, description, logo);
             clinicInfoService.updateClinicInfo(clinic);
         } catch (NumberFormatException e) {
-            // Xử lý nếu ID không hợp lệ
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID phòng khám không hợp lệ.");
             return;
         }
 
-        // 6. Sửa đường dẫn redirect
         response.sendRedirect(request.getContextPath() + "/clinic-info?action=list");
     }
 
@@ -157,12 +154,10 @@ public class ClinicInfoServlet extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             clinicInfoService.deleteClinicInfo(id);
         } catch (NumberFormatException e) {
-            // Xử lý nếu ID không hợp lệ
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID phòng khám không hợp lệ.");
             return;
         }
 
-        // 7. Sửa đường dẫn redirect
         response.sendRedirect(request.getContextPath() + "/clinic-info?action=list");
     }
 }

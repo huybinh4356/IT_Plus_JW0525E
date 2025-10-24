@@ -92,34 +92,77 @@
             transform: translateY(-2px);
         }
 
-        .service-section { padding: 80px 0; text-align: center; }
+        .service-section {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .doctor-section {
+            padding-bottom: 80px;
+            text-align: center;
+        }
+
+        @media (max-width: 991.98px) {
+            .top-bar { display: none; }
+        }
+
+        /* ---------------------------------------------------- */
+        /* CSS CHỈNH SỬA CHO ẢNH DỊCH VỤ (service-img) */
+        /* ---------------------------------------------------- */
+        .service-card .service-img {
+            width: 100%;
+            max-width: 100%;
+            height: 200px; /* Chiều cao cố định cho ảnh dịch vụ */
+            object-fit: cover; /* Cắt ảnh để vừa với khung, giữ tỷ lệ */
+            display: block;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        /* ---------------------------------------------------- */
+        /* CSS GỐC CHO ẢNH BÁC SĨ (sevices-img) - Giữ nguyên */
+        /* ---------------------------------------------------- */
+        .service-card .sevices-img {
+            max-width: 100%;
+            height: auto; /* Chiều cao tự động, giữ tỷ lệ gốc */
+            display: block;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+
+        .service-card .service-icon {
+            font-size: 3rem;
+            color: #007bff;
+            margin-bottom: 15px;
+            border: 2px solid transparent;
+            padding: 10px;
+            line-height: 1;
+        }
+
         .service-card {
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+            padding: 20px;
             min-height: 250px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             align-items: center;
-        }
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        .service-icon {
-            font-size: 2.5rem;
-            color: #007bff;
-            margin-bottom: 15px;
-            border: 2px solid #007bff;
-            border-radius: 50%;
-            padding: 10px;
-            line-height: 1;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,.07);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            background-color: #ffffff;
         }
 
-        @media (max-width: 991.98px) {
-            .top-bar { display: none; }
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,.15);
+        }
+
+        /* Đảm bảo nội dung text trong footer là màu trắng */
+        .footer-info-text {
+            color: #FFFFFF !important; /* Dùng màu trắng để nổi bật */
+            font-weight: 400;
         }
     </style>
 </head>
@@ -198,7 +241,6 @@
                         <i class="fas fa-tooth me-1"></i> Dịch vụ
                     </a>
                 </li>
-                <%-- Menu Đặt lịch (Role 1, 2, 3): Dùng +0 để ép kiểu số học --%>
                 <c:if test="${sessionScope.userRoleId + 0 ge 1 and sessionScope.userRoleId + 0 le 3}">
                     <li class="nav-item me-3">
                         <a class="nav-link text-nowrap" href="<c:url value='/appointments/new'/>">
@@ -213,10 +255,8 @@
                     </a>
                 </li>
 
-                <%-- Biến kiểm tra chung cho Hồ sơ cá nhân và Bệnh án (Role 1, 2, 3) --%>
                 <c:set var="hasPatientAccess" value="${sessionScope.userRoleId + 0 ge 1 and sessionScope.userRoleId + 0 le 3}" />
 
-                <%-- Hồ sơ cá nhân: Loại bỏ logic chuyển hướng dư thừa --%>
                 <c:if test="${hasPatientAccess}">
                     <li class="nav-item me-3">
                         <c:url var="userDetailUrl" value="/users" />
@@ -224,7 +264,6 @@
                     </li>
                 </c:if>
 
-                <%-- Bệnh án: Loại bỏ logic chuyển hướng dư thừa --%>
                 <c:if test="${hasPatientAccess}">
                     <li class="nav-item me-3">
                         <c:url var="medicalRecordsUrl" value="/medical-records?action=list" />
@@ -234,7 +273,6 @@
                     </li>
                 </c:if>
 
-                <%-- Đăng ký nhanh (Role 1, 2) --%>
                 <c:if test="${sessionScope.userRoleId + 0 eq 1 || sessionScope.userRoleId + 0 eq 2}">
                     <li class="nav-item me-3">
                         <a class="nav-link text-nowrap" href="<c:url value='/guest-requests?action=list'/>">
@@ -243,7 +281,6 @@
                     </li>
                 </c:if>
 
-                <%-- Chức năng Admin (Role 1) --%>
                 <c:if test="${sessionScope.userRoleId + 0 eq 1}">
                     <li class="nav-item me-3"><a class="nav-link text-nowrap" href="<c:url value='/users?action=addForm'/>"><i class="fas fa-user-plus me-2"></i> Thêm người dùng</a></li>
                 </c:if>
@@ -269,9 +306,11 @@
 </div>
 
 <hr class="my-0">
+
 <div class="service-section">
     <div class="container-xl">
         <h2 class="fw-bold mb-5" style="font-size: 2rem;">Dịch vụ nổi bật</h2>
+
         <div class="row g-4 justify-content-center">
 
             <div class="col-md-4">
@@ -280,8 +319,8 @@
                     <c:param name="id" value="1"/>
                 </c:url>
                 <a href="${service1DetailUrl}" class="text-decoration-none d-block">
-                    <div class="service-card bg-white">
-                        <i class="fas fa-search service-icon"></i>
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/img_5.png" alt="Khám tổng quát Răng miệng" class="service-img">
                         <h5 class="fw-bold">Khám tổng quát Răng miệng</h5>
                         <p class="text-muted small">Kiểm tra, chụp X-quang phát hiện sớm bệnh lý.</p>
                     </div>
@@ -294,8 +333,8 @@
                     <c:param name="id" value="2"/>
                 </c:url>
                 <a href="${service2DetailUrl}" class="text-decoration-none d-block">
-                    <div class="service-card bg-white">
-                        <i class="fas fa-spray-can service-icon"></i>
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/img_6.png" alt="Cạo vôi Răng & Đánh bóng" class="service-img">
                         <h5 class="fw-bold">Cạo vôi Răng & Đánh bóng</h5>
                         <p class="text-muted small">Loại bỏ cao răng, mảng bám bằng máy siêu âm.</p>
                     </div>
@@ -308,8 +347,8 @@
                     <c:param name="id" value="3"/>
                 </c:url>
                 <a href="${service3DetailUrl}" class="text-decoration-none d-block">
-                    <div class="service-card bg-white">
-                        <i class="fas fa-fill-drip service-icon"></i>
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/img_4.png" alt="Trám Răng Thẩm mỹ" class="service-img">
                         <h5 class="fw-bold">Trám Răng Thẩm mỹ</h5>
                         <p class="text-muted small">Phục hồi răng sâu, mẻ bằng vật liệu Composite.</p>
                     </div>
@@ -322,8 +361,8 @@
                     <c:param name="id" value="4"/>
                 </c:url>
                 <a href="${service4DetailUrl}" class="text-decoration-none d-block">
-                    <div class="service-card bg-white">
-                        <i class="fas fa-tooth service-icon"></i>
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/img_7.png" alt="Tẩy Trắng Răng" class="service-img">
                         <h5 class="fw-bold">Tẩy Trắng Răng</h5>
                         <p class="text-muted small">Công nghệ plasma Beyond, răng trắng sáng an toàn.</p>
                     </div>
@@ -336,8 +375,8 @@
                     <c:param name="id" value="5"/>
                 </c:url>
                 <a href="${service5DetailUrl}" class="text-decoration-none d-block">
-                    <div class="service-card bg-white">
-                        <i class="fas fa-procedures service-icon"></i>
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/img_8.png" alt="Cấy ghép Implant Đơn lẻ" class="service-img">
                         <h5 class="fw-bold">Cấy ghép Implant Đơn lẻ</h5>
                         <p class="text-muted small">Phục hình răng mất bằng trụ Implant Thụy Sĩ, bảo hành trọn đời.</p>
                     </div>
@@ -350,8 +389,8 @@
                     <c:param name="id" value="6"/>
                 </c:url>
                 <a href="${service6DetailUrl}" class="text-decoration-none d-block">
-                    <div class="service-card bg-white">
-                        <i class="fas fa-user-md service-icon"></i>
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/img_9.png" alt="Niềng Răng Mắc cài Kim loại" class="service-img">
                         <h5 class="fw-bold">Niềng Răng Mắc cài Kim loại</h5>
                         <p class="text-muted small">Giải pháp chỉnh nha hiệu quả, chi phí tối ưu.</p>
                     </div>
@@ -363,72 +402,205 @@
             <a href="<c:url value='/services?action=list'/>" class="btn btn-outline-primary btn-lg">Xem tất cả Dịch vụ</a>
         </div>
     </div>
+</div>
 
-    <div class="container-xl mt-5">
+<div class="doctor-section">
+    <div class="container-xl">
         <h2 class="fw-bold mb-5" style="font-size: 2rem; text-align: center;">Đội ngũ Bác sĩ chuyên khoa</h2>
 
         <div class="row g-4 justify-content-center">
 
             <div class="col-md-4">
-                <div class="service-card bg-white">
-                    <i class="fas fa-user-md service-icon" style="color: #28a745; border-color: #28a745;"></i>
-                    <h5 class="fw-bold mt-2">BS. Nguyễn Văn A</h5>
-                    <p class="text-muted small">Chuyên khoa: **Nha khoa Thẩm mỹ**</p>
-                    <p class="text-muted small mb-0">10 năm kinh nghiệm Tẩy trắng và Veneer.</p>
-                </div>
+                <c:url var="doctor1DetailUrl" value="/doctor_list">
+                    <c:param name="action" value="detail"/>
+                    <c:param name="id" value="1"/>
+                </c:url>
+                <a href="${doctor1DetailUrl}" class="text-decoration-none d-block">
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/doctor-img/img.png" alt="Bác sĩ Nguyễn Văn A" class="sevices-img">
+                        <h5 class="fw-bold mt-2">BS. Nguyễn Văn A</h5>
+                        <p class="text-muted small">Chuyên khoa: **Nha khoa Thẩm mỹ**</p>
+                        <p class="text-muted small mb-0">10 năm kinh nghiệm Tẩy trắng và Veneer.</p>
+                    </div>
+                </a>
             </div>
 
             <div class="col-md-4">
-                <div class="service-card bg-white">
-                    <i class="fas fa-procedures service-icon" style="color: #ffc107; border-color: #ffc107;"></i>
-                    <h5 class="fw-bold mt-2">TS. Lê Thị B</h5>
-                    <p class="text-muted small">Chuyên khoa: **Cấy ghép Implant**</p>
-                    <p class="text-muted small mb-0">Chứng chỉ Implant Quốc tế</p>
-                </div>
+                <c:url var="doctor2DetailUrl" value="/doctor_list">
+                    <c:param name="action" value="detail"/>
+                    <c:param name="id" value="2"/>
+                </c:url>
+                <a href="${doctor2DetailUrl}" class="text-decoration-none d-block">
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/doctor-img/img_1.png" alt="Bác sĩ Lê Thị B" class="sevices-img">
+                        <h5 class="fw-bold mt-2">TS. Lê Thị B</h5>
+                        <p class="text-muted small">Chuyên khoa: **Cấy ghép Implant**</p>
+                        <p class="text-muted small mb-0">Chứng chỉ Implant Quốc tế</p>
+                    </div>
+                </a>
             </div>
 
             <div class="col-md-4">
-                <div class="service-card bg-white">
-                    <i class="fas fa-tooth service-icon" style="color: #dc3545; border-color: #dc3545;"></i>
-                    <h5 class="fw-bold mt-2">BSCKI. Trần Văn C</h5>
-                    <p class="text-muted small">Chuyên khoa: **Niềng răng - Chỉnh nha**</p>
-                    <p class="text-muted small mb-0">Chuyên gia Niềng răng mắc cài và Invisalign.</p>
-                </div>
+                <c:url var="doctor3DetailUrl" value="/doctor_list">
+                    <c:param name="action" value="detail"/>
+                    <c:param name="id" value="3"/>
+                </c:url>
+                <a href="${doctor3DetailUrl}" class="text-decoration-none d-block">
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/doctor-img/img.png" alt="Bác sĩ Trần Văn C" class="sevices-img">
+                        <h5 class="fw-bold mt-2">BSCKI. Trần Văn C</h5>
+                        <p class="text-muted small">Chuyên khoa: **Niềng răng - Chỉnh nha**</p>
+                        <p class="text-muted small mb-0">Chuyên gia Niềng răng mắc cài và Invisalign.</p>
+                    </div>
+                </a>
             </div>
 
             <div class="col-md-4">
-                <div class="service-card bg-white">
-                    <i class="fas fa-search service-icon" style="color: #007bff; border-color: #007bff;"></i>
-                    <h5 class="fw-bold mt-2">BS. Phạm Thu D</h5>
-                    <p class="text-muted small">Chuyên khoa: **Nha khoa Tổng quát**</p>
-                    <p class="text-muted small mb-0">Chuyên sâu khám và điều trị nội nha cơ bản.</p>
-                </div>
+                <c:url var="doctor4DetailUrl" value="/doctor_list">
+                    <c:param name="action" value="detail"/>
+                    <c:param name="id" value="4"/>
+                </c:url>
+                <a href="${doctor4DetailUrl}" class="text-decoration-none d-block">
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/doctor-img/img_1.png" alt="Bác sĩ Phạm Thu D" class="sevices-img">
+                        <h5 class="fw-bold mt-2">BS. Phạm Thu D</h5>
+                        <p class="text-muted small">Chuyên khoa: **Nha khoa Tổng quát**</p>
+                        <p class="text-muted small mb-0">Chuyên sâu khám và điều trị nội nha cơ bản.</p>
+                    </div>
+                </a>
             </div>
 
             <div class="col-md-4">
-                <div class="service-card bg-white">
-                    <i class="fas fa-baby service-icon" style="color: #6f42c1; border-color: #6f42c1;"></i>
-                    <h5 class="fw-bold mt-2">BS. Hoàng Mạnh E</h5>
-                    <p class="text-muted small">Chuyên khoa: **Nha khoa Trẻ em**</p>
-                    <p class="text-muted small mb-0">Tiên phong trong dự phòng và điều trị răng trẻ em.</p>
-                </div>
+                <c:url var="doctor5DetailUrl" value="/doctor_list">
+                    <c:param name="action" value="detail"/>
+                    <c:param name="id" value="5"/>
+                </c:url>
+                <a href="${doctor5DetailUrl}" class="text-decoration-none d-block">
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/doctor-img/img.png" alt="Bác sĩ Hoàng Mạnh E" class="sevices-img">
+                        <h5 class="fw-bold mt-2">BS. Hoàng Mạnh E</h5>
+                        <p class="text-muted small">Chuyên khoa: **Nha khoa Trẻ em**</p>
+                        <p class="text-muted small mb-0">Tiên phong trong dự phòng và điều trị răng trẻ em.</p>
+                    </div>
+                </a>
             </div>
 
             <div class="col-md-4">
-                <div class="service-card bg-white">
-                    <i class="fas fa-crown service-icon" style="color: #fd7e14; border-color: #fd7e14;"></i>
-                    <h5 class="fw-bold mt-2">BSCKII. Mai Xuân F</h5>
-                    <p class="text-muted small">Chuyên khoa: **Phục hình Răng sứ**</p>
-                    <p class="text-muted small mb-0">Chuyên gia làm răng sứ, cầu răng, hàm giả tháo lắp.</p>
-                </div>
+                <c:url var="doctor6DetailUrl" value="/doctor_list">
+                    <c:param name="action" value="detail"/>
+                    <c:param name="id" value="6"/>
+                </c:url>
+                <a href="${doctor6DetailUrl}" class="text-decoration-none d-block">
+                    <div class="service-card">
+                        <img src="${pageContext.request.contextPath}/assets/images/doctor-img/img_1.png" alt="Bác sĩ Mai Xuân F" class="sevices-img">
+                        <h5 class="fw-bold mt-2">BSCKII. Mai Xuân F</h5>
+                        <p class="text-muted small">Chuyên khoa: **Phục hình Răng sứ**</p>
+                        <p class="text-muted small mb-0">Chuyên gia làm răng sứ, cầu răng, hàm giả tháo lắp.</p>
+                    </div>
+                </a>
             </div>
         </div>
 
         <div class="text-center mt-5">
-<%--            <a href="<c:url value='/doctors'/>" class="btn btn-outline-secondary btn-lg">Xem tất cả Bác sĩ</a>--%>
+            <a href="<c:url value='/home'/>" class="btn btn-outline-primary btn-lg">Xem tất cả Bác sĩ</a>
         </div>
     </div>
 </div>
+
+<footer class="bg-dark text-white pt-5 pb-4 mt-5">
+    <div class="container-xl">
+        <div class="row g-4">
+
+            <%-- Cột 1: Thông tin cơ bản --%>
+            <div class="col-md-3 col-sm-6">
+                <h5 class="text-uppercase fw-bold mb-3 text-warning">
+                    <i class="fas fa-tooth me-2"></i> DREAMTOOTH CLINIC
+                </h5>
+                <p class="small text-muted">Phòng khám nha khoa hàng đầu, cam kết mang lại nụ cười rạng rỡ và sức khỏe răng miệng tối ưu.</p>
+                <div class="d-flex social-icons mt-3">
+                    <a href="https://www.facebook.com" target="_blank" class="text-white me-3"><i class="fab fa-facebook-f fa-lg"></i></a>
+                    <a href="https://www.twitter.com" target="_blank" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                    <a href="https://www.instagram.com" target="_blank" class="text-white me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                </div>
+            </div>
+
+            <%-- Cột 2: Dịch vụ & Liên kết nhanh --%>
+            <div class="col-md-3 col-sm-6">
+                <h5 class="text-uppercase fw-bold mb-3 text-white">DỊCH VỤ & LIÊN KẾT</h5>
+                <ul class="list-unstyled">
+                    <li><a href="<c:url value='/services'/>" class="text-muted text-decoration-none small">Dịch vụ nổi bật</a></li>
+                    <li><a href="<c:url value='/doctor_list'/>" class="text-muted text-decoration-none small">Đội ngũ Bác sĩ</a></li>
+                    <li><a href="<c:url value='/reviews?action=list'/>" class="text-muted text-decoration-none small">Đánh giá khách hàng</a></li>
+                    <li><a href="<c:url value='/guest-requests?action=addForm'/>" class="text-muted text-decoration-none small">Đặt lịch nhanh</a></li>
+                </ul>
+            </div>
+
+            <%-- Cột 3: Thông tin Chi nhánh 1 (Hardcode) --%>
+            <div class="col-md-3 col-sm-6">
+                <h5 class="text-uppercase fw-bold mb-3 text-white">CN 1: HÀ NỘI</h5>
+                <ul class="list-unstyled">
+                    <li class="small mb-2">
+                        <i class="fas fa-map-marker-alt me-2 text-warning"></i>
+                        <span class="footer-info-text">123 Nguyễn Trãi, Hà Nội</span>
+                    </li>
+                    <li class="small mb-2">
+                        <i class="fas fa-envelope me-2 text-warning"></i>
+                        <span class="footer-info-text">contact@dreamtooth.com</span>
+                    </li>
+                    <li class="small mb-2">
+                        <i class="fas fa-phone-alt me-2 text-warning"></i>
+                        <span class="footer-info-text">0123 456 789</span>
+                    </li>
+                    <li class="small mb-2">
+                        <i class="far fa-clock me-2 text-warning"></i>
+                        <span class="footer-info-text">8:00 - 20:00</span>
+                    </li>
+                </ul>
+            </div>
+
+            <%-- Cột 4: Thông tin Chi nhánh 2 (Hardcode) & Quản lý (Đã đổi tên) --%>
+            <div class="col-md-3 col-sm-6">
+                <h5 class="text-uppercase fw-bold mb-3 text-white">CN 2: HỒ CHÍ MINH</h5>
+                <ul class="list-unstyled">
+                    <li class="small mb-2">
+                        <i class="fas fa-map-marker-alt me-2 text-warning"></i>
+                        <span class="footer-info-text">456 Lê Lợi, TP. Hồ Chí Minh</span>
+                    </li>
+                    <li class="small mb-2">
+                        <i class="fas fa-envelope me-2 text-warning"></i>
+                        <span class="footer-info-text">support@dreamtooth.vn</span>
+                    </li>
+                    <li class="small mb-2">
+                        <i class="fas fa-phone-alt me-2 text-warning"></i>
+                        <span class="footer-info-text">0987 654 321</span>
+                    </li>
+                    <li class="small mb-2">
+                        <i class="far fa-clock me-2 text-warning"></i>
+                        <span class="footer-info-text">9:00 - 21:00</span>
+                    </li>
+
+                    <li class="mt-3 pt-2 border-top border-secondary">
+                        <a href="<c:url value='/clinic-info?action=list'/>" class="text-info text-decoration-none fw-bold small">
+                            <%-- ĐÃ THAY ĐỔI TỪ "QUẢN LÝ" SANG "DANH SÁCH" --%>
+                            <i class="fas fa-cog me-2"></i> DANH SÁCH THÔNG TIN PHÒNG KHÁM
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <hr class="my-4 border-secondary">
+
+        <%-- Copyright --%>
+        <div class="row">
+            <div class="col-12 text-center">
+                <p class="mb-0 small text-muted">&copy; <fmt:formatDate value="<%= new java.util.Date() %>" pattern="yyyy" /> DreamTooth. Tất cả bản quyền được bảo lưu.</p>
+            </div>
+        </div>
+
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -464,5 +636,12 @@
     updateClock();
     setInterval(updateClock, 1000);
 </script>
+<style>
+    /* Thêm style cho các icon mạng xã hội nếu cần */
+    .social-icons a:hover {
+        color: #ffc107 !important;
+        transition: color 0.3s;
+    }
+</style>
 </body>
 </html>

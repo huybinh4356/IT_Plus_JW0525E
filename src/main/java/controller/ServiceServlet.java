@@ -16,7 +16,7 @@ import java.util.Date;
 import java.net.URLEncoder; // Cần thiết cho việc mã hóa thông báo
 import java.nio.charset.StandardCharsets; // Sử dụng cho URLEncoder
 
-@WebServlet("/c")
+@WebServlet("/services")
 public class ServiceServlet extends HttpServlet {
     private final ServiceService serviceService = ServiceService.getInstance();
 

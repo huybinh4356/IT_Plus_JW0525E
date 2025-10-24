@@ -13,6 +13,12 @@
       background-color: #f0f2f5; /* Nền xám nhạt để box trắng nổi bật */
       font-family: 'Inter', sans-serif;
       font-size: 1.1rem;
+      background-image: url('${pageContext.request.contextPath}/assets/images/img_1.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+
     }
     .section-title { font-size: 2.2rem; font-weight: 700; color: #007bff; margin-bottom: 30px; }
 
@@ -79,11 +85,10 @@
       border-radius: 12px; /* Bo góc mềm mại */
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1); /* Đổ bóng chuyên nghiệp */
       margin-top: -50px; /* Kéo lên che phủ một phần banner */
-      position: relative; /* Giữ vị trí khi dùng margin âm */
+      position: relative;
       z-index: 10;
     }
 
-    /* CÁC PHẦN TỬ CON (từ home.jsp) */
     .card-feature {
       background-color: #fff;
       border-left: 5px solid #007bff;

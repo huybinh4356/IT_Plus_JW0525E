@@ -26,6 +26,11 @@ public class ClinicInfoService {
         return clinicInfoDao.findAll();
     }
 
+    // Tìm phòng khám theo ID (BỔ SUNG)
+    public ClinicInfo findById(int clinic_id) {
+        return clinicInfoDao.findById(clinic_id);
+    }
+
     // Thêm mới phòng khám
     public ClinicInfo addClinicInfo(ClinicInfo clinicInfo) {
         return clinicInfoDao.addClinicInfo(clinicInfo);
