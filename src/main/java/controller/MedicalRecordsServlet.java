@@ -22,17 +22,19 @@ public class MedicalRecordsServlet extends HttpServlet {
     private UserService userService;
     private AppointmentService appointmentService;
 
+    // Đảm bảo các đường dẫn này là chính xác trong cấu trúc dự án của bạn
     private static final String LIST_PAGE = "/WEB-INF/views/records-list.jsp";
     private static final String DETAIL_PAGE = "/WEB-INF/views/records-detail.jsp";
     private static final String ADD_PAGE = "/WEB-INF/views/records-add.jsp";
     private static final String EDIT_PAGE = "/WEB-INF/views/records-edit.jsp";
 
-    private static final int PATIENT_ROLE_ID = 3;
+    private static final int PATIENT_ROLE_ID = 3; // ID vai trò Bệnh nhân
 
     @Override
     public void init() throws ServletException {
         super.init();
         try {
+            // Khởi tạo các Service (Giả định phương thức getInstance() là Singleton)
             this.recordsService = MedicalRecordService.getInstance();
             this.userService = UserService.getInstance();
             this.appointmentService = AppointmentService.getInstance();
@@ -50,6 +52,11 @@ public class MedicalRecordsServlet extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
 
         try {
+            // Kiểm tra quyền truy cập trước khi xử lý
+            if (!checkAuthorization(req, resp, action)) {
+                return; // Đã xử lý chuyển hướng hoặc lỗi bên trong checkAuthorization
+            }
+
             switch (action) {
                 case "detail":
                     showRecordDetail(req, resp);
@@ -65,6 +72,7 @@ public class MedicalRecordsServlet extends HttpServlet {
                     break;
                 case "list":
                 default:
+                    // CHỨC NĂNG CHÍNH ĐÃ ĐƯỢC CHỈNH SỬA
                     listAllRecords(req, resp);
                     break;
             }
@@ -80,6 +88,11 @@ public class MedicalRecordsServlet extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
 
         try {
+            // Kiểm tra quyền truy cập cho các hành động POST (thêm, sửa, xóa)
+            if (!checkAuthorizationForPost(req, resp, action)) {
+                return;
+            }
+
             switch (action) {
                 case "add":
                     addMedicalRecord(req, resp);
@@ -100,10 +113,37 @@ public class MedicalRecordsServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Phương thức được chỉnh sửa để lọc hồ sơ theo Role ID.
+     * Nếu là Bệnh nhân (Role ID = 3), chỉ lấy hồ sơ của chính họ.
+     * Nếu là Admin/Bác sĩ, lấy tất cả.
+     */
     private void listAllRecords(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         List<MedicalRecords> records = Collections.emptyList();
+
+        // Lấy thông tin người dùng từ Session
+        HttpSession session = req.getSession(false);
+        // GIẢ ĐỊNH: ID người dùng hiện tại được lưu trong session với tên là "currentUserId"
+        Integer userRoleId = (Integer) (session != null ? session.getAttribute("userRoleId") : null);
+        Integer currentUserId = (Integer) (session != null ? session.getAttribute("currentUserId") : null);
+
         try {
-            records = recordsService.getAllMedicalRecords();
+            if (userRoleId != null && userRoleId == PATIENT_ROLE_ID) {
+                // TRƯỜNG HỢP 1: BỆNH NHÂN (ROLE ID = 3)
+                if (currentUserId != null) {
+                    // Lấy hồ sơ chỉ dành cho ID người dùng hiện tại
+                    records = recordsService.getMedicalRecordsByPatient(currentUserId);
+                    // Set attribute này giúp JSP hiển thị tiêu đề chính xác cho lịch sử bệnh nhân
+                    req.setAttribute("patientId", String.valueOf(currentUserId));
+                } else {
+                    // Bệnh nhân nhưng không có ID trong session (Lỗi phiên)
+                    req.setAttribute("error", "Lỗi phiên: Không tìm thấy ID bệnh nhân.");
+                }
+            } else {
+                // TRƯỜNG HỢP 2: ADMIN/BÁC SĨ (ROLE ID khác 3)
+                // Lấy tất cả hồ sơ
+                records = recordsService.getAllMedicalRecords();
+            }
         } catch (Exception e) {
             System.err.println("LỖI KHI TẢI DANH SÁCH HỒ SƠ Y TẾ:");
             e.printStackTrace();
@@ -116,6 +156,9 @@ public class MedicalRecordsServlet extends HttpServlet {
 
     private void showRecordDetail(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String recordIdParam = req.getParameter("id");
+        HttpSession session = req.getSession(false);
+        Integer userRoleId = (Integer) (session != null ? session.getAttribute("userRoleId") : null);
+        Integer currentUserId = (Integer) (session != null ? session.getAttribute("currentUserId") : null);
 
         try {
             if (recordIdParam == null || recordIdParam.isEmpty()) {
@@ -127,6 +170,15 @@ public class MedicalRecordsServlet extends HttpServlet {
 
             if (record == null) {
                 throw new Exception("Không tìm thấy Hồ sơ y tế có ID: " + recordId);
+            }
+
+            // KIỂM TRA QUYỀN TRUY CẬP CHI TIẾT CHO BỆNH NHÂN
+            if (userRoleId != null && userRoleId == PATIENT_ROLE_ID) {
+                // Nếu hồ sơ này không phải của bệnh nhân hiện tại, từ chối truy cập
+                if (record.getPatient_id() == null || record.getPatient_id().getUser_id() != currentUserId) {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập hồ sơ này.");
+                    return;
+                }
             }
 
             req.setAttribute("record", record);
@@ -187,6 +239,7 @@ public class MedicalRecordsServlet extends HttpServlet {
     }
 
     private void addMedicalRecord(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        // ... (Không thay đổi logic)
         String patientIdParam = req.getParameter("patient_id");
         String appointmentIdParam = req.getParameter("appointment_id");
         String diagnosis = req.getParameter("diagnosis");
@@ -238,6 +291,7 @@ public class MedicalRecordsServlet extends HttpServlet {
     }
 
     private void updateMedicalRecord(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        // ... (Không thay đổi logic)
         String recordIdParam = req.getParameter("record_id");
         String patientIdParam = req.getParameter("patient_id");
         String appointmentIdParam = req.getParameter("appointment_id");
@@ -295,6 +349,7 @@ public class MedicalRecordsServlet extends HttpServlet {
     }
 
     private void deleteMedicalRecord(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        // ... (Không thay đổi logic)
         String recordIdParam = req.getParameter("id");
 
         try {
@@ -322,6 +377,7 @@ public class MedicalRecordsServlet extends HttpServlet {
     }
 
     private void showPatientHistory(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // ... (Giữ nguyên logic này cho việc xem lịch sử của bệnh nhân bất kỳ - dùng cho Admin/Bác sĩ)
         String patientIdParam = req.getParameter("patientId");
         List<MedicalRecords> records = Collections.emptyList();
 
@@ -350,6 +406,7 @@ public class MedicalRecordsServlet extends HttpServlet {
     }
 
     private void loadFormAndForward(HttpServletRequest req, HttpServletResponse resp, String patientIdParam, String appointmentIdParam, String diagnosis, String treatment, String notes) throws ServletException, IOException {
+        // ... (Không thay đổi logic)
         req.setAttribute("old_patient_id", patientIdParam);
         req.setAttribute("old_appointment_id", appointmentIdParam);
         req.setAttribute("old_diagnosis", diagnosis);
@@ -360,5 +417,42 @@ public class MedicalRecordsServlet extends HttpServlet {
         req.setAttribute("patients", patients);
 
         req.getRequestDispatcher(ADD_PAGE).forward(req, resp);
+    }
+
+    // --- BỔ SUNG LOGIC KIỂM TRA QUYỀN TRUY CẬP (Authorization) ---
+
+    /**
+     * Kiểm tra quyền truy cập cho các hành động GET (chỉ cho phép Bệnh nhân xem chi tiết và list của họ).
+     */
+    private boolean checkAuthorization(HttpServletRequest req, HttpServletResponse resp, String action) throws IOException {
+        HttpSession session = req.getSession(false);
+        Integer userRoleId = (Integer) (session != null ? session.getAttribute("userRoleId") : null);
+
+        // Giả định: 1=Admin, 2=Doctor, 3=Patient. Admin/Doctor có quyền cao hơn.
+        if (userRoleId == null) {
+            // Chưa đăng nhập -> Chuyển hướng đến trang đăng nhập (tùy thuộc vào cấu hình của bạn)
+            resp.sendRedirect(req.getContextPath() + "/login?redirect=" + req.getRequestURI());
+            return false;
+        }
+
+        if (userRoleId == PATIENT_ROLE_ID) {
+            // Nếu là Bệnh nhân, chỉ cho phép list và detail (và chi tiết phải được kiểm tra trong detail method)
+            if (!("list".equals(action) || "detail".equals(action))) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thực hiện hành động này.");
+                return false;
+            }
+        }
+        return true;
+    }
+    private boolean checkAuthorizationForPost(HttpServletRequest req, HttpServletResponse resp, String action) throws IOException {
+        HttpSession session = req.getSession(false);
+        Integer userRoleId = (Integer) (session != null ? session.getAttribute("userRoleId") : null);
+
+        // Bệnh nhân không được thực hiện các hành động POST (add, update, delete)
+        if (userRoleId != null && userRoleId == PATIENT_ROLE_ID) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền thay đổi dữ liệu hồ sơ bệnh án.");
+            return false;
+        }
+        return true;
     }
 }

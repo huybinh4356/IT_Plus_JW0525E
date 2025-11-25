@@ -12,6 +12,9 @@ public class ServiceDao {
     private static ServiceDao serviceDao;
 
     private final String FIND_ALL = "SELECT * FROM Services";
+    // Thêm câu lệnh tìm các dịch vụ đang hoạt động
+    private final String FIND_ACTIVE = "SELECT * FROM Services WHERE is_active = 1";
+
     private final String FIND_BY_ID = "SELECT * FROM Services WHERE service_id = ?";
     private final String FIND_BY_NAME = "SELECT * FROM Services WHERE service_name = ?";
     private final String FIND_BY_CATEGORY = "SELECT * FROM Services WHERE category = ?";
@@ -51,6 +54,9 @@ public class ServiceDao {
             service.setWarranty_policy(rs.getString("warranty_policy"));
             service.setPrice(rs.getDouble("price"));
             service.setIs_active(rs.getBoolean("is_active"));
+            // Nếu model Action_Service có thuộc tính image, bạn nên map thêm ở đây
+            // service.setImage(rs.getString("image"));
+
             Timestamp ts = rs.getTimestamp("created_at");
             if (ts != null) {
                 service.setCreated_at(ts.toLocalDateTime());
@@ -63,6 +69,7 @@ public class ServiceDao {
 
     // -------------------- CRUD METHODS --------------------
 
+    // Hàm này lấy TOÀN BỘ (dùng cho trang quản lý admin)
     public List<Action_Service> findAll() {
         List<Action_Service> list = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(FIND_ALL);
@@ -75,6 +82,21 @@ public class ServiceDao {
         }
         return list;
     }
+
+    // === HÀM MỚI THÊM: Dùng cho WishlistServlet (Chỉ lấy dịch vụ Active) ===
+    public List<Action_Service> getAllServices() {
+        List<Action_Service> list = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(FIND_ACTIVE);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapResultSetToService(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    // =======================================================================
 
     public Action_Service findById(int id) {
         try (PreparedStatement ps = conn.prepareStatement(FIND_BY_ID)) {
